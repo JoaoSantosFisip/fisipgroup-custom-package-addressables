@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
@@ -16,26 +15,26 @@ namespace FisipGroup.CustomPackage.Addressables
 
         private static readonly int RetryWaitTime = 5000; //In miliseconds
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static async void CheckForUpdate()
         {
             try
             {
-                var operationCheckCatalog = UnityEngine.AddressableAssets.Addressables.CheckForCatalogUpdates();
+                var operation = UnityEngine.AddressableAssets.Addressables.CheckForCatalogUpdates(false);
 
-                await operationCheckCatalog.Task;
+                await operation.Task;
 
-                if (!operationCheckCatalog.IsValid())
+                if (!operation.IsValid())
                 {
-                    Debug.LogWarning("AddressablesManager.cs: CheckForUpdate AsyncOperation became invalid, trying again.");
+                    Debug.LogError("AddressablesManager.cs: CheckForUpdate AsyncOperation became invalid, trying again.");
 
-                    Thread.Sleep(RetryWaitTime);
+                    await Task.Delay(RetryWaitTime);
 
                     CheckForUpdate();
                 }
                 else
                 {
-                    HandleCatalog(operationCheckCatalog);
+                    HandleCatalog(operation);
                 }
             }
             catch (WebException ex)
@@ -43,7 +42,7 @@ namespace FisipGroup.CustomPackage.Addressables
                 Debug.LogWarning("AddressablesManager.cs: WebException on CheckForUpdate, retrying in 5: "
                     + ex.Status + " - " + ex.Message);
 
-                Thread.Sleep(RetryWaitTime);
+                await Task.Delay(RetryWaitTime);
 
                 CheckForUpdate();
             }
@@ -55,27 +54,27 @@ namespace FisipGroup.CustomPackage.Addressables
                 OnCatalogsUpdate?.Invoke(false);
             }
         }
-        private static async void HandleCatalog(AsyncOperationHandle<List<string>> operationCheckCatalog)
+        private static async void HandleCatalog(AsyncOperationHandle<List<string>> operation)
         {
             try
             {
-                if (operationCheckCatalog.Status == AsyncOperationStatus.Succeeded)
+                if (operation.Status == AsyncOperationStatus.Succeeded)
                 {
-                    if (operationCheckCatalog.Result.Count > 0)
+                    if (operation.Result.Count > 0)
                     {
-                        Debug.Log("<color=cyan>AddressablesManager.cs: Catalogs updated count" + operationCheckCatalog.Result.Count + "</color>");
+                        Debug.Log("<color=cyan>AddressablesManager.cs: Catalogs updated count" + operation.Result.Count + "</color>");
 
-                        var operationUpdateCatalog = UnityEngine.AddressableAssets.Addressables.UpdateCatalogs(operationCheckCatalog.Result);
+                        var operationUpdateCatalog = UnityEngine.AddressableAssets.Addressables.UpdateCatalogs(operation.Result, false);
 
                         await operationUpdateCatalog.Task;
 
                         if (!operationUpdateCatalog.IsValid())
                         {
-                            Debug.LogWarning("AddressablesManager.cs: HandleCatalog AsyncOperation became invalid, trying again.");
+                            Debug.LogError("AddressablesManager.cs: HandleCatalog AsyncOperation became invalid, trying again.");
 
-                            Thread.Sleep(RetryWaitTime);
+                            await Task.Delay(RetryWaitTime);
 
-                            HandleCatalog(operationCheckCatalog);
+                            CheckForUpdate();
                         }
                         else
                         {
@@ -87,9 +86,9 @@ namespace FisipGroup.CustomPackage.Addressables
                             {
                                 if (AddressablesExceptionHandler.Handle(operationUpdateCatalog, "AddressablesManager_UpdateCatalog") == AddressableException.Network)
                                 {
-                                    Thread.Sleep(RetryWaitTime);
+                                    await Task.Delay(RetryWaitTime);
 
-                                    HandleCatalog(operationCheckCatalog);
+                                    CheckForUpdate();
                                 }
                                 else
                                 {
@@ -106,11 +105,11 @@ namespace FisipGroup.CustomPackage.Addressables
                 }
                 else
                 {
-                    if(AddressablesExceptionHandler.Handle(operationCheckCatalog, "AddressablesManager") == AddressableException.Network)
+                    if (AddressablesExceptionHandler.Handle(operation, "AddressablesManager") == AddressableException.Network)
                     {
-                        Thread.Sleep(RetryWaitTime);
+                        await Task.Delay(RetryWaitTime);
 
-                        HandleCatalog(operationCheckCatalog);
+                        CheckForUpdate();
                     }
                     else
                     {
@@ -123,9 +122,9 @@ namespace FisipGroup.CustomPackage.Addressables
                 Debug.LogWarning("AddressablesManager.cs: WebException on CheckForUpdate_OnCompleted, retrying in 5: "
                     + ex.Status + " - " + ex.Message);
 
-                Thread.Sleep(RetryWaitTime);
+                await Task.Delay(RetryWaitTime);
 
-                HandleCatalog(operationCheckCatalog);
+                CheckForUpdate();
             }
             catch (Exception ex)
             {
@@ -175,10 +174,10 @@ namespace FisipGroup.CustomPackage.Addressables
                     }
                     else
                     {
-                        if (AddressablesExceptionHandler.Handle(operationHandle, "AddressablesManager_Task<T>GetAssetWithLabels<T>: " + string.Join(" ", labels)) 
+                        if (AddressablesExceptionHandler.Handle(operationHandle, "AddressablesManager_Task<T>GetAssetWithLabels<T>: " + string.Join(" ", labels))
                             == AddressableException.Network)
                         {
-                            Thread.Sleep(RetryWaitTime);
+                            await Task.Delay(RetryWaitTime);
 
                             return await GetAssetWithLabels<T>(labels);
                         }
@@ -201,7 +200,7 @@ namespace FisipGroup.CustomPackage.Addressables
                 Debug.LogWarning("AddressablesManager.cs: WebException on Task<T> GetAssetWithLabels<T>: " + string.Join(" ", labels)
                     + ex.Status + " - " + ex.Message);
 
-                Thread.Sleep(RetryWaitTime);
+                await Task.Delay(RetryWaitTime);
 
                 return await GetAssetWithLabels<T>(labels);
             }
@@ -255,7 +254,7 @@ namespace FisipGroup.CustomPackage.Addressables
                         if (AddressablesExceptionHandler.Handle(operationHandle, "AddressablesManager_GetAssetWithLabels: " + string.Join(" ", labels))
                             == AddressableException.Network)
                         {
-                            Thread.Sleep(RetryWaitTime);
+                            await Task.Delay(RetryWaitTime);
 
                             GetAssetWithLabels(labels, callback);
                         }
@@ -278,7 +277,7 @@ namespace FisipGroup.CustomPackage.Addressables
                 Debug.LogWarning("AddressablesManager.cs: WebException on GetAssetWithLabels: " + string.Join(" ", labels)
                     + ex.Status + " - " + ex.Message);
 
-                Thread.Sleep(RetryWaitTime);
+                await Task.Delay(RetryWaitTime);
 
                 GetAssetWithLabels(labels, callback);
             }
@@ -327,7 +326,7 @@ namespace FisipGroup.CustomPackage.Addressables
                     if (AddressablesExceptionHandler.Handle(operationHandle, "AddressablesManager")
                        == AddressableException.Network)
                     {
-                        Thread.Sleep(RetryWaitTime);
+                        await Task.Delay(RetryWaitTime);
 
                         GetAssetsWithKey(key, callback);
                     }
@@ -343,7 +342,7 @@ namespace FisipGroup.CustomPackage.Addressables
                     + key + " - "
                     + ex.Status + " - " + ex.Message);
 
-                Thread.Sleep(RetryWaitTime);
+                await Task.Delay(RetryWaitTime);
 
                 GetAssetsWithKey(key, callback);
             }
