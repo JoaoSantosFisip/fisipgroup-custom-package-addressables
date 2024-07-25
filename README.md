@@ -1,0 +1,1 @@
+This custom package contains several scripts to help on the development of FisipGroup projects with the Addressables Package.

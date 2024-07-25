@@ -1,0 +1,24 @@
+{
+  "name": "com.fisipgroup.addressables",
+  "version": "1.0.0",
+  "displayName": "FisipGroup Addressables",
+  "description": "This custom package contains several scripts to help on the development of FisipGroup projects with the Addressables Package.",
+  "unity": "2019.1",
+  "unityRelease": "0b5",
+  "documentationUrl": "",
+  "changelogUrl": "https://github.com/JoaoSantosFisip/fisipgroup-custom-package-addressables/blob/main/CHANGELOG.md",
+  "licensesUrl": "https://github.com/JoaoSantosFisip/fisipgroup-custom-package-addressables/blob/main/LICENSE.md",
+  "keywords": [
+    "addressables",
+    "fisipgroup"
+  ],
+  "author": {
+    "name": "FisipGroup",
+    "email": "joao@fisipgroup.com",
+    "url": "https://github.com/JoaoSantosFisip"
+  },
+  "dependencies": {
+    "com.unity.addressables": "1.21.21",
+    "com.fisipgroup.tools": "1.0.9"
+  }
+}

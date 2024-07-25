@@ -1,0 +1,21 @@
+{
+    "name": "com.fisipgroup.addressables.editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:69448af7b92c7f342b298e06a37122aa",
+        "GUID:29c41e6e8c7b0ee4cab7ebf30ba18345",
+        "GUID:6042a9115913bd747a97949ea436c37a",
+        "GUID:35c607609a0dee248b7b8192ccb1b8e0"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
