@@ -1,4 +1,3 @@
-using System;
 using UnityEditor;
 using UnityEngine;
 using UnityEditor.AddressableAssets;
@@ -77,16 +76,10 @@ namespace FisipGroup.CustomPackage.Addressables.Editor
         private static string GetVersionName()
         {
 #if UNITY_ANDROID
-            return DateTime.Now.Year + "." 
-                + DateTime.Now.Month + "." 
-                + DateTime.Now.Day + "_" 
-                + DateTime.Now.Hour + "."
-                + DateTime.Now.Minute + "_"
-                + PlayerSettings.Android.bundleVersionCode;
+            return PlayerSettings.Android.bundleVersionCode.ToString();
+
 #elif UNITY_IOS
-            return DateTime.Now.Year + "."
-                + DateTime.Now.DayOfYear + "."
-                + PlayerSettings.iOS.buildNumber;
+            return PlayerSettings.iOS.buildNumber;
 #endif
         }
     }

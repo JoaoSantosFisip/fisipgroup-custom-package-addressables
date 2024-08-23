@@ -1,5 +1,8 @@
 All notable changes to this project will be documented in this file.
 
+[1.0.3] - 2024-08-23
+ - Changed how version id is created.
+
 [1.0.2] - 2024-07-25
  - Improved loading stability with check updates.
 
