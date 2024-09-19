@@ -4,6 +4,7 @@ using FisipGroup.CustomPackage.Tools.Extensions;
 using FisipGroup.CustomPackage.Tools.Helpers;
 using FisipGroup.CustomPackage.Tools.EditorTool;
 using FisipGroup.CustomPackage.Addressables.Helpers;
+using UnityEditor.AddressableAssets;
 
 namespace FisipGroup.CustomPackage.Addressables.Editor
 {
@@ -15,8 +16,6 @@ namespace FisipGroup.CustomPackage.Addressables.Editor
         private static AddressablesInfoScriptableObject Info;
 
         private static readonly string PackageName = "Addressables";
-
-        private static readonly string RemoteBuildPath = "ServerData/[BuildTarget]";
 
         [MenuItem("FisipGroup/Addressables")]
         public static void ShowWindow()
@@ -107,7 +106,10 @@ namespace FisipGroup.CustomPackage.Addressables.Editor
 #elif UNITY_IOS
                 var loadPath = AddressablesPaths.GetPathURL(newInfoFile.projectID, newInfoFile.iosBucketID, newInfoFile.iosBadge);
 #endif
-                AddressablesHelper.UpdateProfileSettings(AddressablesPaths.RemoteBuildPath, loadPath);
+                AddressableAssetSettingsDefaultObject.Settings.profileSettings
+                .SetValue(AddressableAssetSettingsDefaultObject.Settings.activeProfileId, "Remote.BuildPath", AddressablesPaths.RemoteBuildPath);
+                AddressableAssetSettingsDefaultObject.Settings.profileSettings
+                    .SetValue(AddressableAssetSettingsDefaultObject.Settings.activeProfileId, "Remote.LoadPath", loadPath);
 
                 Info = HelperCustomPackage.SaveFileChanges(newInfoFile, PackageName) as AddressablesInfoScriptableObject;
             }

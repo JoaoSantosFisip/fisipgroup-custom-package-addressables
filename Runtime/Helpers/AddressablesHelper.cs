@@ -3,7 +3,6 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using UnityEditor.AddressableAssets;
 using UnityEngine;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
@@ -92,14 +91,6 @@ namespace FisipGroup.CustomPackage.Addressables.Helpers
 
                 return null;
             }
-        }
-       
-        public static void UpdateProfileSettings(string remoteBuildPath, string remoteLoadPath)
-        {
-            AddressableAssetSettingsDefaultObject.Settings.profileSettings
-                .SetValue(AddressableAssetSettingsDefaultObject.Settings.activeProfileId, "Remote.BuildPath", remoteBuildPath);
-            AddressableAssetSettingsDefaultObject.Settings.profileSettings
-                .SetValue(AddressableAssetSettingsDefaultObject.Settings.activeProfileId, "Remote.LoadPath", remoteLoadPath);
         }
 
         /// <summary>

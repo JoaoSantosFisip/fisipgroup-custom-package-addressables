@@ -2,6 +2,7 @@ using UnityEditor;
 using UnityEngine;
 using FisipGroup.CustomPackage.Tools.Helpers;
 using FisipGroup.CustomPackage.Addressables.Helpers;
+using UnityEditor.AddressableAssets;
 
 namespace FisipGroup.CustomPackage.Addressables.Editor
 {
@@ -62,7 +63,10 @@ namespace FisipGroup.CustomPackage.Addressables.Editor
         }
         private static void SetAddressableSettings(BuildPlayerOptions options, string buildPath, string loadPath)
         {
-            AddressablesHelper.UpdateProfileSettings(buildPath, loadPath);
+            AddressableAssetSettingsDefaultObject.Settings.profileSettings
+                .SetValue(AddressableAssetSettingsDefaultObject.Settings.activeProfileId, "Remote.BuildPath", buildPath);
+            AddressableAssetSettingsDefaultObject.Settings.profileSettings
+                .SetValue(AddressableAssetSettingsDefaultObject.Settings.activeProfileId, "Remote.LoadPath", loadPath);
 
             BuildPipeline.BuildPlayer(options);
         }
