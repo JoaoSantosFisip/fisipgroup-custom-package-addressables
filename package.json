@@ -1,6 +1,6 @@
 {
   "name": "com.fisipgroup.addressables",
-  "version": "1.0.4",
+  "version": "2.0.0",
   "displayName": "FisipGroup Addressables",
   "description": "This custom package contains several scripts to help on the development of FisipGroup projects with the Addressables Package.",
   "unity": "2019.1",

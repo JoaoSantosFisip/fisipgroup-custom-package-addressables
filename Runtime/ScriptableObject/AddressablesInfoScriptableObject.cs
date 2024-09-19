@@ -12,9 +12,9 @@ namespace FisipGroup.CustomPackage.Addressables
         public string environmentID;
         [Header("IOS")]
         public string iosBucketID;
-        public string iosReleaseID;
+        public string iosBadge;
         [Header("ANDROID")]
         public string androidBucketID;
-        public string androidReleaseID;
+        public string androidBadge;
     }
 }

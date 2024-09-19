@@ -1,8 +1,7 @@
-using System;
 using UnityEditor;
 using UnityEngine;
-using UnityEditor.AddressableAssets;
 using FisipGroup.CustomPackage.Tools.Helpers;
+using FisipGroup.CustomPackage.Addressables.Helpers;
 
 namespace FisipGroup.CustomPackage.Addressables.Editor
 {
@@ -12,10 +11,6 @@ namespace FisipGroup.CustomPackage.Addressables.Editor
     /// </summary>
     public static class AddressablesBadgePopup
     {
-        private static readonly string RemoteBuildPath = "ServerData/[BuildTarget]";
-        private static readonly string LocalBuildPath = "[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]";
-        private static readonly string LocalLoadPath = "{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]";
-
         [InitializeOnLoadMethod]
         private static void RegisterBuildHandler()
         {
@@ -40,15 +35,15 @@ namespace FisipGroup.CustomPackage.Addressables.Editor
                 // Cloud
                 case 0:
 #if UNITY_ANDROID
-                    SetAddressableSettings(options, RemoteBuildPath, AddressablesHelper.GetPathURL(info.projectID, info.androidBucketID, info.androidReleaseID));
+                    SetAddressableSettings(options, AddressablesPaths.RemoteBuildPath, AddressablesPaths.GetPathURL(info.projectID, info.androidBucketID, info.androidBadge));
 #elif UNITY_IOS
-                    SetAddressableSettings(options, RemoteBuildPath, AddressablesHelper.GetPathURL(info.projectID, info.iosBucketID, info.iosReleaseID));
+                    SetAddressableSettings(options, AddressablesPaths.RemoteBuildPath, AddressablesHelper.GetPathURL(info.projectID, info.iosBucketID, info.iosReleaseID));
 #endif
                     break;
 
                 // Local
                 case 1:
-                    SetAddressableSettings(options, LocalBuildPath, LocalLoadPath);
+                    SetAddressableSettings(options, AddressablesPaths.LocalBuildPath, AddressablesPaths.LocalLoadPath);
                     break;
 
                 // Cancel
@@ -67,9 +62,7 @@ namespace FisipGroup.CustomPackage.Addressables.Editor
         }
         private static void SetAddressableSettings(BuildPlayerOptions options, string buildPath, string loadPath)
         {
-            var settings = AddressableAssetSettingsDefaultObject.Settings;
-            settings.profileSettings.SetValue(settings.activeProfileId, "Remote.BuildPath", buildPath);
-            settings.profileSettings.SetValue(settings.activeProfileId, "Remote.LoadPath", loadPath);
+            AddressablesHelper.UpdateProfileSettings(buildPath, loadPath);
 
             BuildPipeline.BuildPlayer(options);
         }

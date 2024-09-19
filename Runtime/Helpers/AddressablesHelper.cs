@@ -3,11 +3,12 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityEditor.AddressableAssets;
 using UnityEngine;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
 
-namespace FisipGroup.CustomPackage.Addressables
+namespace FisipGroup.CustomPackage.Addressables.Helpers
 {
     /// <summary>
     /// Methods to help on the development of Addressables scripts.
@@ -92,20 +93,15 @@ namespace FisipGroup.CustomPackage.Addressables
                 return null;
             }
         }
-        /// <summary>
-        /// Get the url path of the cloud content bucket.
-        /// </summary>
-        /// <param name="projectID"></param>
-        /// <param name="bucketID"></param>
-        /// <param name="releaseID"></param>
-        /// <returns></returns>
-        public static string GetPathURL(string projectID, string bucketID, string releaseID)
+       
+        public static void UpdateProfileSettings(string remoteBuildPath, string remoteLoadPath)
         {
-            return $"https://{projectID}" +
-                $".client-api.unity3dusercontent.com/client_api/v1/environments/production/buckets/{bucketID}" +
-                $"/releases/{releaseID}" +
-                $"/entry_by_path/content/?path=";
+            AddressableAssetSettingsDefaultObject.Settings.profileSettings
+                .SetValue(AddressableAssetSettingsDefaultObject.Settings.activeProfileId, "Remote.BuildPath", remoteBuildPath);
+            AddressableAssetSettingsDefaultObject.Settings.profileSettings
+                .SetValue(AddressableAssetSettingsDefaultObject.Settings.activeProfileId, "Remote.LoadPath", remoteLoadPath);
         }
+
         /// <summary>
         /// Get the url of the cloud content dashboard page.
         /// </summary>
