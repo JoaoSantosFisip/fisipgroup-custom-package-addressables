@@ -38,7 +38,7 @@ namespace FisipGroup.CustomPackage.Addressables.Editor
 #if UNITY_ANDROID
                     SetAddressableSettings(options, AddressablesPaths.RemoteBuildPath, AddressablesPaths.GetPathURL(info.projectID, info.androidBucketID, info.androidBadge));
 #elif UNITY_IOS
-                    SetAddressableSettings(options, AddressablesPaths.RemoteBuildPath, AddressablesHelper.GetPathURL(info.projectID, info.iosBucketID, info.iosReleaseID));
+                    SetAddressableSettings(options, AddressablesPaths.RemoteBuildPath, AddressablesPaths.GetPathURL(info.projectID, info.iosBucketID, info.iosBadge));
 #endif
                     break;
 
@@ -59,7 +59,12 @@ namespace FisipGroup.CustomPackage.Addressables.Editor
 
         private static void SetVersionName()
         {
-            PlayerSettings.bundleVersion = GetVersionName();
+#if UNITY_ANDROID
+            PlayerSettings.bundleVersion = PlayerSettings.Android.bundleVersionCode.ToString();
+
+#elif UNITY_IOS
+            PlayerSettings.bundleVersion = PlayerSettings.iOS.buildNumber;
+#endif
         }
         private static void SetAddressableSettings(BuildPlayerOptions options, string buildPath, string loadPath)
         {
@@ -69,16 +74,6 @@ namespace FisipGroup.CustomPackage.Addressables.Editor
                 .SetValue(AddressableAssetSettingsDefaultObject.Settings.activeProfileId, "Remote.LoadPath", loadPath);
 
             BuildPipeline.BuildPlayer(options);
-        }
-
-        private static string GetVersionName()
-        {
-#if UNITY_ANDROID
-            return PlayerSettings.Android.bundleVersionCode.ToString();
-
-#elif UNITY_IOS
-            return PlayerSettings.iOS.buildNumber;
-#endif
         }
     }
 }

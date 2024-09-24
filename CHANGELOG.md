@@ -1,5 +1,8 @@
 All notable changes to this project will be documented in this file.
 
+[2.0.2] - 2024-09-24
+ - Fixed ios bug.
+
 [2.0.1] - 2024-09-19
  - Fixed build bug.
 
