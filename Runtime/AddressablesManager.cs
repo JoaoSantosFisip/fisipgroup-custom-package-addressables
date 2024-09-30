@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.Events;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
@@ -19,24 +20,13 @@ namespace FisipGroup.CustomPackage.Addressables
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static async void CheckForUpdate()
         {
+            AsyncOperationHandle<List<string>> operation = new();
+
             try
             {
-                var operation = UnityEngine.AddressableAssets.Addressables.CheckForCatalogUpdates(false);
+                operation = UnityEngine.AddressableAssets.Addressables.CheckForCatalogUpdates(false);
 
                 await operation.Task;
-
-                if (!operation.IsValid())
-                {
-                    Debug.LogError("AddressablesManager.cs: CheckForUpdate AsyncOperation became invalid, trying again.");
-
-                    await Task.Delay(RetryWaitTime);
-
-                    CheckForUpdate();
-                }
-                else
-                {
-                    HandleCatalog(operation);
-                }
             }
             catch (WebException ex)
             {
@@ -46,6 +36,8 @@ namespace FisipGroup.CustomPackage.Addressables
                 await Task.Delay(RetryWaitTime);
 
                 CheckForUpdate();
+
+                return;
             }
             catch (Exception ex)
             {
@@ -53,86 +45,106 @@ namespace FisipGroup.CustomPackage.Addressables
                         + ex.Message);
 
                 OnCatalogsUpdate?.Invoke(false);
+
+                return;
+            }
+
+            if (!operation.IsValid())
+            {
+                Debug.LogError("AddressablesManager.cs: CheckForUpdate AsyncOperation became invalid, trying again.");
+
+                await Task.Delay(RetryWaitTime);
+
+                CheckForUpdate();
+            }
+            else
+            {
+                HandleCatalog(operation);
             }
         }
         private static async void HandleCatalog(AsyncOperationHandle<List<string>> operation)
         {
-            try
+            if(operation.Status != AsyncOperationStatus.Succeeded)
             {
-                if (operation.Status == AsyncOperationStatus.Succeeded)
+                if (AddressablesExceptionHandler.Handle(operation, "AddressablesManager") == AddressableException.Network)
                 {
-                    if (operation.Result.Count > 0)
-                    {
-                        Debug.Log("<color=cyan>AddressablesManager.cs: Catalogs updated count" + operation.Result.Count + "</color>");
+                    await Task.Delay(RetryWaitTime);
 
-                        var operationUpdateCatalog = UnityEngine.AddressableAssets.Addressables.UpdateCatalogs(operation.Result, false);
-
-                        await operationUpdateCatalog.Task;
-
-                        if (!operationUpdateCatalog.IsValid())
-                        {
-                            Debug.LogError("AddressablesManager.cs: HandleCatalog AsyncOperation became invalid, trying again.");
-
-                            await Task.Delay(RetryWaitTime);
-
-                            CheckForUpdate();
-                        }
-                        else
-                        {
-                            if (operationUpdateCatalog.Status == AsyncOperationStatus.Succeeded)
-                            {
-                                OnCatalogsUpdate?.Invoke(true);
-                            }
-                            else
-                            {
-                                if (AddressablesExceptionHandler.Handle(operationUpdateCatalog, "AddressablesManager_UpdateCatalog") == AddressableException.Network)
-                                {
-                                    await Task.Delay(RetryWaitTime);
-
-                                    CheckForUpdate();
-                                }
-                                else
-                                {
-                                    OnCatalogsUpdate?.Invoke(false);
-
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        OnCatalogsUpdate?.Invoke(true);
-                    }
+                    CheckForUpdate();
                 }
                 else
                 {
-                    if (AddressablesExceptionHandler.Handle(operation, "AddressablesManager") == AddressableException.Network)
+                    OnCatalogsUpdate?.Invoke(false);
+                }
+            }
+            else
+            {
+                if(operation.Result.Count == 0)
+                {
+                    OnCatalogsUpdate?.Invoke(true);
+                }
+                else
+                {
+                    Debug.Log("<color=cyan>AddressablesManager.cs: Catalogs updated count" + operation.Result.Count + "</color>");
+
+                    AsyncOperationHandle<List<IResourceLocator>> operationUpdateCatalog = new();
+
+                    try
                     {
+                        operationUpdateCatalog = UnityEngine.AddressableAssets.Addressables.UpdateCatalogs(operation.Result, false);
+
+                        await operationUpdateCatalog.Task;
+                    }
+                    catch (WebException ex)
+                    {
+                        Debug.LogWarning("AddressablesManager.cs: WebException on CheckForUpdate_OnCompleted, retrying in 5: "
+                            + ex.Status + " - " + ex.Message);
+
+                        await Task.Delay(RetryWaitTime);
+
+                        CheckForUpdate();
+
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError("AddressablesManager.cs: Exception during CheckForUpdate_OnCompleted: "
+                                + ex.Message);
+
+                        OnCatalogsUpdate?.Invoke(false);
+
+                        return;
+                    }
+
+                    if (!operationUpdateCatalog.IsValid())
+                    {
+                        Debug.LogError("AddressablesManager.cs: HandleCatalog AsyncOperation became invalid, trying again.");
+
                         await Task.Delay(RetryWaitTime);
 
                         CheckForUpdate();
                     }
                     else
                     {
-                        OnCatalogsUpdate?.Invoke(false);
+                        if (operationUpdateCatalog.Status == AsyncOperationStatus.Succeeded)
+                        {
+                            OnCatalogsUpdate?.Invoke(true);
+                        }
+                        else
+                        {
+                            if (AddressablesExceptionHandler.Handle(operationUpdateCatalog, "AddressablesManager_UpdateCatalog") == AddressableException.Network)
+                            {
+                                await Task.Delay(RetryWaitTime);
+
+                                CheckForUpdate();
+                            }
+                            else
+                            {
+                                OnCatalogsUpdate?.Invoke(false);
+                            }
+                        }
                     }
                 }
-            }
-            catch (WebException ex)
-            {
-                Debug.LogWarning("AddressablesManager.cs: WebException on CheckForUpdate_OnCompleted, retrying in 5: "
-                    + ex.Status + " - " + ex.Message);
-
-                await Task.Delay(RetryWaitTime);
-
-                CheckForUpdate();
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError("AddressablesManager.cs: Exception during CheckForUpdate_OnCompleted: "
-                        + ex.Message);
-
-                OnCatalogsUpdate?.Invoke(false);
             }
         }
 
@@ -213,6 +225,7 @@ namespace FisipGroup.CustomPackage.Addressables
                 return default;
             }
         }
+
         /// <summary>
         /// Returns asset with specific labels. Callback version
         /// </summary>
@@ -290,6 +303,7 @@ namespace FisipGroup.CustomPackage.Addressables
                 callback.Invoke(false, default);
             }
         }
+
         /// <summary>
         /// Returns assets with specific key. Callback version
         /// </summary>
@@ -299,9 +313,11 @@ namespace FisipGroup.CustomPackage.Addressables
         /// <param name="progress"></param>
         public async static void GetAssetsWithKey<T>(string key, Action<bool, T[]> callback, Action<float> progress = null)
         {
+            AsyncOperationHandle<IList<T>> operationHandle = new();
+
             try
             {
-                var operationHandle = UnityEngine.AddressableAssets.Addressables.LoadAssetsAsync<T>(key, null);
+                operationHandle = UnityEngine.AddressableAssets.Addressables.LoadAssetsAsync<T>(key, null);
 
                 if (progress != null)
                 {
@@ -316,26 +332,6 @@ namespace FisipGroup.CustomPackage.Addressables
                 {
                     await operationHandle.Task;
                 }
-
-                // Check if the loading was successful
-                if (operationHandle.Status == AsyncOperationStatus.Succeeded)
-                {
-                    callback?.Invoke(true, operationHandle.Result.ToArray());
-                }
-                else
-                {
-                    if (AddressablesExceptionHandler.Handle(operationHandle, "AddressablesManager")
-                       == AddressableException.Network)
-                    {
-                        await Task.Delay(RetryWaitTime);
-
-                        GetAssetsWithKey(key, callback);
-                    }
-                    else
-                    {
-                        callback?.Invoke(false, default);
-                    }
-                }
             }
             catch (WebException ex)
             {
@@ -346,6 +342,8 @@ namespace FisipGroup.CustomPackage.Addressables
                 await Task.Delay(RetryWaitTime);
 
                 GetAssetsWithKey(key, callback);
+
+                return;
             }
             catch (Exception ex)
             {
@@ -353,6 +351,28 @@ namespace FisipGroup.CustomPackage.Addressables
                         + ex.Message);
 
                 callback?.Invoke(false, default);
+
+                return;
+            }
+
+            // Check if the loading was successful
+            if (operationHandle.Status == AsyncOperationStatus.Succeeded)
+            {
+                callback?.Invoke(true, operationHandle.Result.ToArray());
+            }
+            else
+            {
+                if (AddressablesExceptionHandler.Handle(operationHandle, "AddressablesManager")
+                   == AddressableException.Network)
+                {
+                    await Task.Delay(RetryWaitTime);
+
+                    GetAssetsWithKey(key, callback);
+                }
+                else
+                {
+                    callback?.Invoke(false, default);
+                }
             }
         }
     }

@@ -1,5 +1,8 @@
 All notable changes to this project will be documented in this file.
 
+[2.0.3] - 2024-09-30
+ - Fixed try catches on the code.
+
 [2.0.2] - 2024-09-24
  - Fixed ios bug.
 
